@@ -25,6 +25,8 @@ def get_scripts(sub_reddit_name: str, limit=5) -> list[Script]:
     subreddit = reddit.subreddit(sub_reddit_name)
     scripts: list[Script] = []
     for submission in subreddit.top(time_filter="day", limit=limit):
+        if submission.over_18:
+            continue
         script: Script = Script()
         script.url = submission.url
         script.folder_name = f"post-{submission.created_utc}-{submission.id}"

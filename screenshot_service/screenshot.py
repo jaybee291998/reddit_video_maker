@@ -25,8 +25,9 @@ class ScreenshotService:
 
     def __setup_driver(self, url: str):
         options = Options()
-        # options.add_argument("--headless")
-        # options.add_argument("--disable-gpu")
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument('--disable-extensions')
         self.driver =  webdriver.Firefox(options=options)
         self.wait = WebDriverWait(self.driver, 10)
 

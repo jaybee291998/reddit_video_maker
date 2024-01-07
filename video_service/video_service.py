@@ -3,7 +3,9 @@ import configparser
 from .model.frame import Frame
 from .model.video_request import VideoRequest
 from moviepy.editor import VideoFileClip, VideoClip, CompositeVideoClip, ImageClip, AudioFileClip, concatenate_videoclips
+from moviepy.video.fx.resize import resize
 
+from .background_service import BackgroundService
 
 class VideoService:
     
@@ -11,6 +13,8 @@ class VideoService:
         config = configparser.ConfigParser()
         config.read("settings.ini")
         self.video_dir = config['VideoService']['video_dir']
+        self.image_clip_scale = float(config['VideoService']['image_clip_scale'])
+        self.background_service: BackgroundService = BackgroundService()
     
     def create_frame_clip(self, frame: Frame) -> ImageClip:
         audio_clip: AudioFileClip = AudioFileClip(frame.audio_path)
@@ -19,15 +23,15 @@ class VideoService:
         return image_clip
 
     def create_video_clip(self, video_request: VideoRequest) -> str:
-        background_clip: VideoFileClip = VideoFileClip(video_request.background_video_path)
-        
-        image_clips: ImageClip = concatenate_videoclips([self.create_frame_clip(frame) for frame in video_request.frames])
 
+        image_clips: ImageClip = concatenate_videoclips([self.create_frame_clip(frame) for frame in video_request.frames]) 
+        background_clip: VideoFileClip = self.background_service.get_background(image_clips.duration)
+        image_clips = resize(image_clips, self.image_clip_scale)
         center_position = (background_clip.size[0] // 2 - image_clips.size[0] // 2, background_clip.size[1] // 2 - image_clips.size[1] // 2)
         image_clips = image_clips.set_position(center_position)
 
-        background_clip = background_clip.subclip(0, image_clips.duration)
-        background_clip = background_clip.without_audio()
+        # background_clip = background_clip.subclip(0, image_clips.duration)
+        # background_clip = background_clip.without_audio()
 
         video_clip: CompositeVideoClip = CompositeVideoClip(clips=[background_clip, image_clips])
 
@@ -39,5 +43,6 @@ class VideoService:
         full_path: str = f'{base_path}/{video_request.file_name}.mp4'
 
         video_clip.write_videofile(full_path)
+        # background_clip.write_videofile(full_path)
         return full_path
 

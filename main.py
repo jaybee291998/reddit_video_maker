@@ -13,7 +13,12 @@ from voice_service.voice import VoiceService
 from video_service.model.frame import Frame
 from video_service.model.video_request import VideoRequest
 from video_service.video_service import VideoService
+import configparser
 # print(scripts)
+
+config = configparser.ConfigParser()
+
+config.read("settings.ini")
 
 def script_to_screenshot_requests(script: Script) -> list[ScreenshotRequest]:
     screenshot_requests: list[ScreenshotRequest] = []
@@ -83,38 +88,23 @@ def make_frames(voice_models: list[VoiceModel], screenshot_models: list[Screensh
     return frames
 
 
-scripts: list[Script] = get_scripts(sub_reddit_name="AskReddit", limit=1)
+scripts: list[Script] = get_scripts(sub_reddit_name="AskReddit", limit=2)
 screenshot_service: ScreenshotService = ScreenshotService()
 voice_service: VoiceService = VoiceService()
 video_service: VideoService = VideoService()
 list_models_all: list[list[ScreenshotModel]] = []
 list_voice_models_all: list[list[VoiceModel]] = []
-background_video_path: str = "test_vid.mp4"
+background_video_path: str = config["Background"]["background_dir"] + "/test_vid.mp4"
 for script in scripts:
     screenshot_requests: list[ScreenshotRequest] = script_to_screenshot_requests(script)
     list_models: list[ScreenshotModel] = screenshot_service.take_screenshots_by_ID(screenshot_requests=screenshot_requests)
 
     voice_requests: list[VoiceRequest] = script_to_voice_requests(script)
     list_voice_models: list[VoiceModel] = voice_service.get_voices(voice_requests)
-    print("------------------------------------------")
-    print("screen shot models")
-    print(list_models)
-    print("------------------------------------------")
-    print("+++++++++++++++++++++++++++++++++++++++++++")
-    print("voice models")
-    print(list_voice_models)
-    print("+++++++++++++++++++++++++++++++++++++++++++")
     frames: list[Frame] = make_frames(voice_models=list_voice_models, screenshot_models=list_models)
-    video_request: VideoRequest = create_video_request('haha.mp4', script.folder_name, background_video_path, frames)
-    print("************************************************")
-    print(video_request)
+    file_name: str = script.submission.file_name
+    video_request: VideoRequest = create_video_request(file_name, script.folder_name, background_video_path, frames)
     video_model: str = video_service.create_video_clip(video_request)
-    print("************************************************")
     list_voice_models_all.append(list_voice_models)
-    # list_models_all.append(list_models)
-    print("---------------------------------")
-    # print(screenshot_requests)
-    print("---------------------------------")
-
 # print(list_models_all)
-print(list_voice_models_all)
+# print(list_voice_models_all)
