@@ -24,7 +24,7 @@ class VideoService:
 
     def create_video_clip(self, video_request: VideoRequest) -> str:
 
-        image_clips: ImageClip = concatenate_videoclips([self.create_frame_clip(frame) for frame in video_request.frames]) 
+        image_clips: ImageClip = concatenate_videoclips([self.create_frame_clip(frame) for frame in video_request.frames if frame.image_path is not None and frame.audio_path is not None]) 
         background_clip: VideoFileClip = self.background_service.get_background(image_clips.duration)
         image_clips = resize(image_clips, self.image_clip_scale)
         center_position = (background_clip.size[0] // 2 - image_clips.size[0] // 2, background_clip.size[1] // 2 - image_clips.size[1] // 2)

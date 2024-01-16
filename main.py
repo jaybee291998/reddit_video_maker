@@ -88,7 +88,7 @@ def make_frames(voice_models: list[VoiceModel], screenshot_models: list[Screensh
     return frames
 
 
-scripts: list[Script] = get_scripts(sub_reddit_name="AskReddit", limit=2)
+scripts: list[Script] = get_scripts(sub_reddit_name="AskReddit", limit=1)
 screenshot_service: ScreenshotService = ScreenshotService()
 voice_service: VoiceService = VoiceService()
 video_service: VideoService = VideoService()
@@ -97,6 +97,7 @@ list_voice_models_all: list[list[VoiceModel]] = []
 background_video_path: str = config["Background"]["background_dir"] + "/test_vid.mp4"
 for script in scripts:
     screenshot_requests: list[ScreenshotRequest] = script_to_screenshot_requests(script)
+    print(screenshot_requests)
     list_models: list[ScreenshotModel] = screenshot_service.take_screenshots_by_ID(screenshot_requests=screenshot_requests)
 
     voice_requests: list[VoiceRequest] = script_to_voice_requests(script)

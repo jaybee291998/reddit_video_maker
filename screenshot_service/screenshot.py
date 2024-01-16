@@ -54,25 +54,31 @@ class ScreenshotService:
         return full_path
     
     def __take_screenshot_from_single_url(self, screenshot_request: ScreenshotRequest, method: By) -> ScreenshotModel:
-        search = self.wait.until(EC.presence_of_element_located((method, screenshot_request.handle)))
-        self.driver.execute_script("window.focus();")
+        try:
+            search = self.wait.until(EC.presence_of_element_located((method, screenshot_request.handle)))
+            self.driver.execute_script("window.focus();")
 
-        # action = ActionChains(self.driver)
-        # action.move_to_element(search)
-        # action.perform()
+            # action = ActionChains(self.driver)
+            # action.move_to_element(search)
+            # action.perform()
 
-        base_path = f"{self.screenshot_dir}/{screenshot_request.folder_name}"
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-        full_path = f"{base_path}/{screenshot_request.file_name}.png"
+            base_path = f"{self.screenshot_dir}/{screenshot_request.folder_name}"
+            if not os.path.exists(base_path):
+                os.makedirs(base_path)
+            full_path = f"{base_path}/{screenshot_request.file_name}.png"
 
-        fp = open(full_path, "wb")
-        fp.write(search.screenshot_as_png)
-        fp.close()
-        screenshot_model: ScreenshotModel = ScreenshotModel()
-        screenshot_model.id = screenshot_request.id
-        screenshot_model.path = full_path
-        return screenshot_model
+            fp = open(full_path, "wb")
+            fp.write(search.screenshot_as_png)
+            fp.close()
+            screenshot_model: ScreenshotModel = ScreenshotModel()
+            screenshot_model.id = screenshot_request.id
+            screenshot_model.path = full_path
+            return screenshot_model
+        except Exception as e:
+            screenshot_model: ScreenshotModel = ScreenshotModel()
+            screenshot_model.id = screenshot_request.id
+            screenshot_model.path = None
+            return screenshot_model
 
     # def take_screenshot_by_id(self, screenshot_request: ScreenshotRequest) -> ScreenshotModel:
     #     return self.__take_screenshot(

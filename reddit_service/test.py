@@ -2,11 +2,14 @@ from dotenv import load_dotenv
 import praw
 import os
 from .model.entry import Entry
+import configparser
 
 from .model.script import Script
 
 load_dotenv(".env")
 
+config = configparser.ConfigParser()
+config.read("settings.ini")
 CLIENT_ID = os.getenv("CLIENT_ID")
 SECRET_KEY = os.getenv("SECRET_KEY")
 PASSWORD = os.getenv("PASSWORD")
@@ -21,6 +24,9 @@ reddit = praw.Reddit(
     username=USERNAME
 )
 
+MAX_CHAR_COUNT = int(config["RedditService"]["comment_max_char_count"])
+MAX_COMMENT_COUNT = int(config["RedditService"]["max_number_of_comment"])
+
 def get_scripts(sub_reddit_name: str, limit=5) -> list[Script]:
     subreddit = reddit.subreddit(sub_reddit_name)
     scripts: list[Script] = []
@@ -33,10 +39,12 @@ def get_scripts(sub_reddit_name: str, limit=5) -> list[Script]:
         script.submission = Entry(id=submission.id, title=submission.title, body=submission.selftext, file_name=f"post-{submission.id}", handle="")
         i = 0
         for comment in submission.comments:
+            if len(comment.body) > MAX_CHAR_COUNT:
+                continue
             commentModel: Entry = Entry(title="", id=comment.id, body=comment.body, file_name=f"comment-{comment.id}", handle="")
             script.addComment(commentModel)
             i+=1
-            if i > 5:
+            if i > MAX_COMMENT_COUNT:
                 break
         scripts.append(script)
     return scripts
